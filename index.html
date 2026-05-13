@@ -432,7 +432,9 @@
 // ══════════════════════════════════════════
 // URL визначається автоматично (Apps Script)
 // ══════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYLmLGF9njzUgtwhZN2p2MCIjqldLRwo5DvOPerTemSyiEGvNGuCObNmsTXEQ2KIj-/exec';
+const SCRIPT_URL = window.location.hostname.includes('github.io')
+  ? 'https://script.google.com/macros/s/AKfycbxYLmLGF9njzUgtwhZN2p2MCIjqldLRwo5DvOPerTemSyiEGvNGuCObNmsTXEQ2KIj-/exec'
+  : '__SCRIPT_URL__';
 
 // ════════════════════════════════════════════════════════
 // EXIF — зчитування GPS з метаданих JPEG
