@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3b7ff5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Фотозвіт">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Фото-звіт</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
@@ -1156,7 +1163,17 @@ function showError(msg) {
   statusMsg.scrollIntoView({ behavior:'smooth', block:'center' });
 }
 
-function resetForm() {
+// ════════════════════════════════════════════════════════
+// PWA — реєстрація Service Worker
+// ════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+
   document.getElementById('workerName').value = '';
   document.getElementById('objectName').value = '';
   document.getElementById('f-note').value = '';
