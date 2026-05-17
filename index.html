@@ -440,7 +440,7 @@
 // URL визначається автоматично (Apps Script)
 // ══════════════════════════════════════════
 const SCRIPT_URL = window.location.hostname.includes('github.io')
-  ? 'https://script.google.com/macros/s/AKfycbyIs6VYvDSfiKwkVrC3ummmgely5NNXHHC2T4rHzPqxWOdesPHFHThjAjokwdmAolAoLg/exec'
+  ? 'https://script.google.com/macros/s/AKfycby2XayFuWDjHZPqKffYvcptx0SsFpilwND1q0lNCWteH4sUZR5T462CHa3Y0e1Ua1JoSQ/exec'
   : '__SCRIPT_URL__';
 
 // ════════════════════════════════════════════════════════
@@ -1137,7 +1137,6 @@ const DB_NAME    = 'fotozvit_db';
 const DB_VERSION = 1;
 const STORE_NAME = 'queue';
 
-// ── Відкрити IndexedDB ──
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -1152,7 +1151,6 @@ function openDB() {
   });
 }
 
-// ── Додати запис в чергу ──
 async function addToQueue(payload) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1164,7 +1162,6 @@ async function addToQueue(payload) {
   });
 }
 
-// ── Отримати всі записи ──
 async function getAllFromQueue() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1176,7 +1173,6 @@ async function getAllFromQueue() {
   });
 }
 
-// ── Видалити запис ──
 async function removeFromQueue(id) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1188,7 +1184,6 @@ async function removeFromQueue(id) {
   });
 }
 
-// ── Кількість записів ──
 async function getQueueCount() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1224,8 +1219,10 @@ document.getElementById('queue-badge').addEventListener('click', () => {
   if (confirm('Відправити всі записи з черги?')) tryFlushQueue();
 });
 
+let _flushing = false;
 async function tryFlushQueue() {
-  if (!isOnline) return;
+  if (!isOnline || _flushing) return;
+  _flushing = true;
   try {
     const queue = await getAllFromQueue();
     if (!queue.length) return;
@@ -1241,6 +1238,8 @@ async function tryFlushQueue() {
     await updateQueueBadge();
   } catch(e) {
     console.log('Flush queue error:', e);
+  } finally {
+    _flushing = false;
   }
 }
 
