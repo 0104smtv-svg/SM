@@ -11,8 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Фотозвіт">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icon-192.png"><style>
+<style>
   @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
 
   :root {
@@ -441,7 +440,7 @@
 // URL визначається автоматично (Apps Script)
 // ══════════════════════════════════════════
 const SCRIPT_URL = window.location.hostname.includes('github.io')
-  ? 'https://script.google.com/macros/s/AKfycbxmJ3nbFr-JBMuDEVluRiIupvX0tn--NJA5u3nMUZXu7PRBYOzvPxuvWOW3MP2iL1yq/exec'
+  ? 'https://script.google.com/macros/s/AKfycbyIs6VYvDSfiKwkVrC3ummmgely5NNXHHC2T4rHzPqxWOdesPHFHThjAjokwdmAolAoLg/exec'
   : '__SCRIPT_URL__';
 
 // ════════════════════════════════════════════════════════
@@ -1138,6 +1137,7 @@ const DB_NAME    = 'fotozvit_db';
 const DB_VERSION = 1;
 const STORE_NAME = 'queue';
 
+// ── Відкрити IndexedDB ──
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -1152,6 +1152,7 @@ function openDB() {
   });
 }
 
+// ── Додати запис в чергу ──
 async function addToQueue(payload) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1163,6 +1164,7 @@ async function addToQueue(payload) {
   });
 }
 
+// ── Отримати всі записи ──
 async function getAllFromQueue() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1174,6 +1176,7 @@ async function getAllFromQueue() {
   });
 }
 
+// ── Видалити запис ──
 async function removeFromQueue(id) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1185,6 +1188,7 @@ async function removeFromQueue(id) {
   });
 }
 
+// ── Кількість записів ──
 async function getQueueCount() {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -1213,26 +1217,18 @@ function updateOnlineStatus() {
 }
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
-
-isOnline = navigator.onLine;
-offlineBanner.classList.toggle('visible', !isOnline);
+updateOnlineStatus();
 updateQueueBadge();
-if (isOnline) tryFlushQueue();
 
 document.getElementById('queue-badge').addEventListener('click', () => {
   if (confirm('Відправити всі записи з черги?')) tryFlushQueue();
 });
 
-let _flushing = false;
 async function tryFlushQueue() {
-  if (!isOnline || _flushing) return;
-  _flushing = true;
+  if (!isOnline) return;
   try {
     const queue = await getAllFromQueue();
-    if (!queue.length) {
-      _flushing = false;
-      return;
-    }
+    if (!queue.length) return;
     for (const item of queue) {
       try {
         const r = await fetch(SCRIPT_URL, {
@@ -1245,8 +1241,6 @@ async function tryFlushQueue() {
     await updateQueueBadge();
   } catch(e) {
     console.log('Flush queue error:', e);
-  } finally {
-    _flushing = false;
   }
 }
 
