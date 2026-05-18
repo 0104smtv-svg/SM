@@ -12,8 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
-<style>
+<link rel="icon" type="image/png" sizes="16x16" href="icon-192.png"><style>
   @import url('https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&display=swap');
 
   :root {
@@ -442,7 +441,7 @@
 // URL визначається автоматично (Apps Script)
 // ══════════════════════════════════════════
 const SCRIPT_URL = window.location.hostname.includes('github.io')
-  ? 'https://script.google.com/macros/s/AKfycby2XayFuWDjHZPqKffYvcptx0SsFpilwND1q0lNCWteH4sUZR5T462CHa3Y0e1Ua1JoSQ/exec'
+  ? 'https://script.google.com/macros/s/AKfycbzZdjaOoGXoEvnj0h7HphgKK9Pyk7c_40g26XVFMoHUfkaLfLhWOxfUHlsxji_ax87u/exec'
   : '__SCRIPT_URL__';
 
 // ════════════════════════════════════════════════════════
@@ -1214,7 +1213,11 @@ function updateOnlineStatus() {
 }
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
-updateOnlineStatus();
+
+// Ініціалізація без виклику tryFlushQueue —
+// щоб при оновленні сторінки не було подвійної відправки
+isOnline = navigator.onLine;
+offlineBanner.classList.toggle('visible', !isOnline);
 updateQueueBadge();
 
 document.getElementById('queue-badge').addEventListener('click', () => {
@@ -1227,7 +1230,10 @@ async function tryFlushQueue() {
   _flushing = true;
   try {
     const queue = await getAllFromQueue();
-    if (!queue.length) return;
+    if (!queue.length) {
+      _flushing = false;
+      return;
+    }
     for (const item of queue) {
       try {
         const r = await fetch(SCRIPT_URL, {
