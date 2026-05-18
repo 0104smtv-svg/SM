@@ -440,7 +440,7 @@
 // URL визначається автоматично (Apps Script)
 // ══════════════════════════════════════════
 const SCRIPT_URL = window.location.hostname.includes('github.io')
-  ? 'https://script.google.com/macros/s/AKfycbyIs6VYvDSfiKwkVrC3ummmgely5NNXHHC2T4rHzPqxWOdesPHFHThjAjokwdmAolAoLg/exec'
+  ? 'https://script.google.com/macros/s/AKfycbzK8GeCeHgTNjGfcQV3X3aVtQCiad20b3NijG2IVnkv9K4oPtC9-bnJfd-CztyApgoCLA/exec'
   : '__SCRIPT_URL__';
 
 // ════════════════════════════════════════════════════════
@@ -1210,10 +1210,16 @@ async function updateQueueBadge() {
   }
 }
 
+// ── Захист від паралельних викликів flush ──
+let isFlushing = false;
+
 function updateOnlineStatus() {
   isOnline = navigator.onLine;
   offlineBanner.classList.toggle('visible', !isOnline);
-  if (isOnline) tryFlushQueue();
+  if (isOnline) {
+    // Затримка 2с при завантаженні сторінки — уникаємо гонки з ініціалізацією
+    setTimeout(tryFlushQueue, 2000);
+  }
 }
 window.addEventListener('online',  updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
@@ -1225,7 +1231,8 @@ document.getElementById('queue-badge').addEventListener('click', () => {
 });
 
 async function tryFlushQueue() {
-  if (!isOnline) return;
+  if (!isOnline || isFlushing) return;
+  isFlushing = true;
   try {
     const queue = await getAllFromQueue();
     if (!queue.length) return;
@@ -1235,12 +1242,18 @@ async function tryFlushQueue() {
           method: 'POST',
           body: JSON.stringify(item.payload)
         });
-        if (r.ok) await removeFromQueue(item.id);
-      } catch(e) { /* залишаємо в черзі */ }
+        if (r.ok) {
+          const data = await r.json();
+          // Видаляємо з черги і при успіху, і при дублікаті (сервер вже має ці дані)
+          if (data.status === 'ok') await removeFromQueue(item.id);
+        }
+      } catch(e) { /* залишаємо в черзі — мережа ще недоступна */ }
     }
-    await updateQueueBadge();
   } catch(e) {
     console.log('Flush queue error:', e);
+  } finally {
+    isFlushing = false;
+    await updateQueueBadge();
   }
 }
 
@@ -1270,7 +1283,11 @@ async function handleSubmit() {
 
   const coords = getBestCoords();
 
+  // Унікальний ID для захисту від подвійного надсилання
+  const submissionId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
   const payload = {
+    submissionId,
     workerName,
     objectName,
     account,
@@ -1324,12 +1341,35 @@ async function handleSubmit() {
     showSuccess(`✓ Звіт відправлено! Збережено ${data.photoCount} фото.${coordsInfo}`);
     resetForm();
   } catch(err) {
-    try {
-      await addToQueue(payload);
-      await updateQueueBadge();
-      showError(`Помилка: ${err.message}. Збережено в чергу — спробуємо пізніше.`);
-    } catch(e) {
-      showError(`Помилка відправки: ${err.message}.`);
+    // Якщо були онлайн під час відправки — сервер міг прийняти дані.
+    // Запитуємо користувача, щоб не створити дублікат автоматично.
+    if (isOnline) {
+      const addToQ = confirm(
+        `Помилка відправки: ${err.message}\n\n` +
+        `Увага! Сервер міг вже отримати дані.\n` +
+        `Додати в чергу для повторної відправки?\n\n` +
+        `(Натисніть "Скасування", якщо дані вже є в таблиці)`
+      );
+      if (addToQ) {
+        try {
+          await addToQueue(payload);
+          await updateQueueBadge();
+          showError(`Помилка: ${err.message}. Збережено в чергу — перевірте таблицю на дублікати.`);
+        } catch(e) {
+          showError(`Помилка відправки: ${err.message}. Перевірте таблицю вручну.`);
+        }
+      } else {
+        showError(`Помилка: ${err.message}. Перевірте таблицю — дані могли зберегтися.`);
+      }
+    } else {
+      // Офлайн — додаємо автоматично, це безпечно (submissionId захистить від дубліката)
+      try {
+        await addToQueue(payload);
+        await updateQueueBadge();
+        showError(`Немає з'єднання. Збережено в чергу — буде відправлено автоматично.`);
+      } catch(e) {
+        showError(`Помилка відправки: ${err.message}.`);
+      }
     }
   } finally {
     submitBtn.disabled = false;
