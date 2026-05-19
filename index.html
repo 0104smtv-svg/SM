@@ -84,7 +84,7 @@
 
   .section {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
+    border-radius: var(--radius); padding: 20px; margin-bottom: 12px;
   }
   .section-title {
     font-size: 11px; font-weight: 600; letter-spacing: 1px;
@@ -93,10 +93,10 @@
   }
   .section-title::after { content:''; flex:1; height:1px; background: var(--border); }
 
-  .field { margin-bottom: 12px; position: relative; }
+  .field { margin-bottom: 16px; position: relative; }
   .field:last-child { margin-bottom: 0; }
 
-  label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
   label .req { color: var(--accent2); margin-left: 2px; }
 
   .input-wrap { position: relative; }
@@ -108,10 +108,10 @@
   .input-wrap .clear-btn.visible { display: block; }
 
   input[type="text"] {
-    width: 100%; padding: 11px 32px 11px 13px;
+    width: 100%; padding: 12px 32px 12px 13px;
     background: var(--bg); border: 1px solid var(--border);
     border-radius: 8px; color: var(--text);
-    font-family: var(--font); font-size: 15px;
+    font-family: var(--font); font-size: 16px;
     outline: none; transition: border-color .15s, box-shadow .15s;
     -webkit-appearance: none;
   }
@@ -157,7 +157,7 @@
     width: 100%; padding: 11px 13px;
     background: var(--bg); border: 1px solid var(--border);
     border-radius: 8px; color: var(--text);
-    font-family: var(--font); font-size: 15px;
+    font-family: var(--font); font-size: 16px;
     outline: none; transition: border-color .15s, box-shadow .15s;
     -webkit-appearance: none; resize: vertical; min-height: 80px;
   }
@@ -440,7 +440,7 @@
 // URL визначається автоматично (Apps Script)
 // ══════════════════════════════════════════
 const SCRIPT_URL = window.location.hostname.includes('github.io')
-  ? 'https://script.google.com/macros/s/AKfycbzOf16n1MpfQbgfe2-zoej6neBKh15HSXKeUD1MjbedDhAdtOM0ZAvuAXmLlRb6ZKS0/exec'
+  ? 'https://script.google.com/macros/s/AKfycbx5G5iKUxy00AT9KIjd4qKQFpPXHxzKE-5RBhy09yAyBgfmlK9VYczkMeoazWZ480cz/exec'
   : '__SCRIPT_URL__';
 
 // ════════════════════════════════════════════════════════
